@@ -3,20 +3,20 @@
     <div class="filter">
 			<el-form :inline="true" :model="filters">
 				<el-form-item>
-					<el-input placeholder="请输入内容"  style="width:300px;">
-					    <el-select  slot="prepend" placeholder="请选择" style="width:100px;">
+					<el-input placeholder="请输入内容" v-model="filters.user_car_tel" style="width:300px;">
+					    <el-select v-model="filters.search" slot="prepend" placeholder="请选择" style="width:100px;">
 					      <el-option 
 					      	v-for="item in options"
-							:key="item.value"
-							:label="item.label"
-							:value="item.value">
-						   </el-option>
+							    :key="item.value"
+							    :label="item.label"
+							    :value="item.value">
+						    </el-option>
 					    </el-select>
 					</el-input>
 				</el-form-item>
-                <el-form-item>
-                    <el-date-picker type="daterange" format="yyyy-MM-dd" :picker-options="pickerOptions2" placeholder="选择时间"  style="width: 250px"></el-date-picker>
-                </el-form-item>
+          <el-form-item>
+              <el-date-picker type="daterange" format="yyyy-MM-dd" :picker-options="pickerOptions2" placeholder="选择时间" v-model="filters.days" style="width: 250px"></el-date-picker>
+          </el-form-item>
 				<el-form-item>
 					<el-button type="success" icon="search" @click="search">查询</el-button>
 				</el-form-item>
@@ -30,17 +30,14 @@
       style="width: 100%">
       <el-table-column
         prop="id"
-        label="userid"
-        width="180">
+        label="id">
       </el-table-column>
       
       <el-table-column  prop="createtime"  label="createtime" width="180"> </el-table-column>      
-      <el-table-column  prop="name"  label="username" width="180"> </el-table-column>
-      <el-table-column  prop="stopaddress"  label="stop" width="180"> </el-table-column>
-
-      <el-table-column        prop="address"        label="开始地址" width="180">
+      <el-table-column  prop="name"  label="项目" width="180"> </el-table-column>
+      <el-table-column        prop="startaddress"        label="开始地址" width="180">
         <template slot-scope="scope"> 
-          <el-tag>{{scope.row.address}}</el-tag>
+          <el-tag>{{scope.row.startaddress}}</el-tag>
         </template>
       </el-table-column>
       <el-table-column  prop="stopaddress"  label="结束地址" width="180"> </el-table-column>
@@ -50,21 +47,24 @@
       <template slot-scope="scope">
         <el-button
           size="mini"
-          type="info"
+          type="primary"
           @click="showPath(scope.$index, scope.row)">轨迹</el-button>
       </template>
       </el-table-column>
     </el-table>
     
-    <div class="block">
+    <div> <br> </div>
+
+    <div class="el-pagination is-background">
       <el-pagination
+        background
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         :current-page="currentPage4"
         :page-sizes="[10, 30, 50, 100]"
         :page-size="10"
         layout="total, sizes, prev, pager, next, jumper"
-        :total="400">
+        :total="totalcount">
       </el-pagination>
     </div>
 
@@ -80,15 +80,10 @@
 
 <script>
 import { getList } from '@/api/table_page.js'
+import moment from "moment"
 
 export default {
   methods: {
-    handleSizeChange(val) {
-      console.log(`每页 ${val} 条`)
-    },
-    handleCurrentChange(val) {
-      console.log(`当前页1: ${val}`)
-    },
     showPath(index, row) {
       this.dialogVisible = true
       this.paths = row.paths
@@ -174,6 +169,71 @@ export default {
         })
         endMarker.setMap(map)
       }
+    },
+    async search(){
+      let params = {};
+      let sDay = this.filters.days[0],
+        eDay = this.filters.days[1]
+      if (!sDay) {
+        this.$message({
+          type : 'warning',
+          message : '日期不能为空'
+        });
+        return false
+      }
+      params['days'] = moment(sDay).format('YYYY-MM-DD')+'@'+moment(eDay).format('YYYY-MM-DD')
+      console.log(this.filters.search)
+      params['search'] = this.filters.search
+      params[this.filters.search] = this.filters.user_car_tel
+      this.listLoading = true
+      let response = await getList(params)
+      if (response) {
+        this.tableData2 = []
+        this.currentPage4 = response['current_page']
+        this.pagesize = response['page_size']
+        this.totalcount = response['total_count']
+        if (response['status'] === '200') {
+          for (var i in response['results']) {
+            this.tableData2.push(
+              response['results'][i]
+            )
+          }
+        }
+      }
+      this.listLoading = false
+    },
+    handleSizeChange(val) {
+      this.pagesize = val
+      var pra = { 'page': this.currentPage4, 'page_size': this.pagesize }
+      getList(pra).then(response => {
+        if (response['status'] === '200') {
+          this.tableData2 = []
+          this.currentPage4 = response['current_page']
+          this.pagesize = response['page_size']
+          this.totalcount = response['total_count']
+          for (var i in response['results']) {
+            this.tableData2.push(
+              response['results'][i]
+            )
+          }
+        }
+      })
+    },
+    handleCurrentChange(val) {
+      var pra = { 'page': val, 'page_size': this.pagesize }
+      getList(pra).then(response => {
+        if (response['status'] === '200') {
+          this.tableData2 = []
+          this.currentPage4 = response['current_page']
+          this.pagesize = response['page_size']
+          this.totalcount = response['total_count']
+          for (var i in response['results']) {
+            this.tableData2.push(
+              response['results'][i]
+            )
+          }
+        }
+      })
     }
   },
   data() {
@@ -181,9 +241,30 @@ export default {
       tableData2: [{
         'id': 'i',
         'name': 'i',
-        'address': 'github',
+        'startaddress': 'github',
         'createtime': 'i',
         'paths': []
+      }],
+      filters: {
+        user_car_tel: '',
+        search: 'run',
+        days: []
+      },
+      options: [{
+        value: 'bike',
+        label: '骑行'
+      }, {
+        value: 'run',
+        label: '跑步'
+      }, {
+        value: 'walk',
+        label: '遛弯'
+      }, {
+        value: 'driving',
+        label: '驾车'
+      }, {
+        value: 'daily',
+        label: '日常出行'
       }],
       currentPage4: 1,
       dialogVisible: false,
@@ -197,7 +278,37 @@ export default {
       startMarker: null,
       endMarker: null,
       endLnglat: [],
-      tagActiveName: 'list'
+      tagActiveName: 'list',
+      pickerOptions2: {
+        shortcuts: [
+          {
+            text: '昨天',
+            onClick(picker) {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime() - 3600 * 1000 * 24)
+              end.setTime(end.getTime() - 3600 * 1000 * 24)
+              picker.$emit('pick', [start, end])
+            }
+          },
+          {
+            text: '最近一周',
+            onClick(picker) {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+              picker.$emit('pick', [start, end])
+            }
+          }, {
+            text: '最近一个月',
+            onClick(picker) {
+              const end = new Date()
+              const start = new Date()
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+              picker.$emit('pick', [start, end])
+            }
+          }]
+      }
     }
   },
   mounted() {

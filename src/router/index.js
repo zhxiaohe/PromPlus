@@ -36,7 +36,18 @@ export const constantRouterMap = [
       component: () => import('@/views/dashboard/index')
     }]
   },
-
+  {
+    path: '/dashboard',
+    component: Layout,
+    children: [
+      {
+        path: 'dashboard',
+        name: 'dashboard',
+        component: () => import('@/views/dashboard/index'),
+        meta: { title: 'dashboard', icon: 'form' }
+      }
+    ]
+  },
   {
     path: '/example',
     component: Layout,
@@ -63,29 +74,16 @@ export const constantRouterMap = [
         meta: { title: 'Tree2', icon: 'tree' }
       },
       {
-        path: 'tree3',
-        name: 'Tree3',
+        path: 'sportquery',
+        name: '运动查询',
         component: () => import('@/views/tree3/index'),
-        meta: { title: 'Tree-page', icon: 'tree' }
+        meta: { title: '运动查询', icon: 'table' }
       },
       {
-        path: 'tree4',
-        name: 'Tree4',
+        path: 'sport',
+        name: '运动轨迹',
         component: () => import('@/views/tree4/index'),
-        meta: { title: 'Tree34', icon: 'tree' }
-      }
-    ]
-  },
-
-  {
-    path: '/form',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        name: 'Form',
-        component: () => import('@/views/form/index'),
-        meta: { title: 'Form', icon: 'form' }
+        meta: { title: '运动轨迹', icon: 'tree' }
       }
     ]
   },
