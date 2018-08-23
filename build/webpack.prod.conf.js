@@ -68,7 +68,8 @@ const webpackConfig = merge(baseWebpackConfig, {
       template: 'index.html',
       inject: true,
       favicon: resolve('favicon.ico'),
-      title: 'vue-element-admin',
+      // favicon: 'static/favicon.ico',
+      title: 'PromPlus',
       minify: {
         removeComments: true,
         collapseWhitespace: true,

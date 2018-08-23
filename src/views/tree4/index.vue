@@ -40,7 +40,11 @@
           <el-tag>{{scope.row.startaddress}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column  prop="stopaddress"  label="结束地址" width="180"> </el-table-column>
+      <el-table-column  prop="stopaddress"  label="结束地址" width="180">
+        <template slot-scope="scope"> 
+          <el-tag>{{scope.row.stopaddress}}</el-tag>
+        </template>   
+      </el-table-column>
       <el-table-column  prop="whentime"  label="时长" width="180"> </el-table-column>
 
       <el-table-column  fixed="right" label="操作">
@@ -52,10 +56,8 @@
       </template>
       </el-table-column>
     </el-table>
-    
-    <div> <br> </div>
-
-    <div class="el-pagination is-background">
+      
+    <div class="pagination-container">
       <el-pagination
         background
         @size-change="handleSizeChange"
@@ -69,7 +71,7 @@
     </div>
 
     <el-dialog
-      title="提示"
+      title="轨迹"
       :visible.sync="dialogVisible" @open="showMap">
       <div id="mapPath" style="height:400px;"></div>
     </el-dialog>
@@ -80,7 +82,7 @@
 
 <script>
 import { getList } from '@/api/table_page.js'
-import moment from "moment"
+import moment from 'moment'
 
 export default {
   methods: {
@@ -88,39 +90,39 @@ export default {
       this.dialogVisible = true
       this.paths = row.paths
       var l = this.paths.length
-			this.mapCenter = this.paths[0]
-			this.endLnglat = this.paths[l-1]
+      this.mapCenter = this.paths[0]
+      this.endLnglat = this.paths[ l-1 ]
     },
-    showMap(){
+    showMap() {
       this.$nextTick(() => {
-        if(!this.map){
+        if (!this.map) {
           this.map = new AMap.Map('mapPath', {
             // resizeEnable: true,
-            zoom : 13
+            zoom: 13
           })
-        }else{
-          this.map.setCenter(this.mapCenter);
-      }
-      this.map.clearMap();
-        this.drawUserPath(this.map,this.paths,this.mapCenter,this.endLnglat);
+        } else {
+          this.map.setCenter(this.mapCenter)
+        }
+        this.map.clearMap()
+        this.drawUserPath(this.map, this.paths, this.mapCenter, this.endLnglat)
       })
-		},
-		drawUserPath(map,paths,startLnglat,endLnglat,index,SimpleMarker){
+    },
+    drawUserPath(map, paths, startLnglat, endLnglat, index, SimpleMarker){
       // let sc = ['#FF981C','#FF6978','#7F96FF','#039BE5','#56E39F','#7D33CE','#EC5E4E','#5B127B','#834262','#93032E','#0F4C5C','#BE01FF','#3BF984','#3A1772','#6457A6','#4C9EA3','#C2996D','#EA3838','#EA6A54','#AE9A63','#E55934','#2C377B'];
-      let sc = ["red","orange","green","blue","orchid","darkred","darkblue","darkgreen","purple","cadetblue","black"];
-      let strokeColor = index ? sc[index%sc.length] : '#13ce66';
-      console.log(index);
-      let polyline = new AMap.Polyline({
-        path: paths,          // 设置线覆盖物路径
+      let sc = ["red", "orange", "green", "blue", "orchid", "darkred", "darkblue", "darkgreen", "purple", "cadetblue", "black"]
+      let strokeColor = index ? sc[index % sc.length] : '#13ce66'
+      console.log(index)
+      const polyline = new AMap.Polyline({
+        path: paths, // 设置线覆盖物路径
         strokeColor: strokeColor, // 线颜色
-        strokeOpacity: 1,       // 线透明度
-        strokeWeight: 4,        // 线宽
-        strokeStyle: "solid",   // 线样式
+        strokeOpacity: 1, // 线透明度
+        strokeWeight: 4, // 线宽
+        strokeStyle: 'solid', // 线样式
         strokeDasharray: [10, 5] // 补充线样式
       })
-      polyline.setMap(map);
+      polyline.setMap(map)
 
-      if(SimpleMarker){ // 多条颜色
+      if (SimpleMarker) { // 多条颜色
         new SimpleMarker({
           iconLabel: {
             innerHTML: '始' + index,
@@ -130,10 +132,10 @@ export default {
               marginTop: '2px'
             }
           },
-          iconStyle: sc[index%sc.length],
+          iconStyle: sc[index % sc.length],
           map: map,
           position: startLnglat
-        });
+        })
 
         new SimpleMarker({
           iconLabel: {
@@ -144,12 +146,12 @@ export default {
               marginTop: '2px'
             }
           },
-          iconStyle: sc[index%sc.length],
+          iconStyle: sc[index % sc.length],
           map: map,
           position: endLnglat
         })
-      }else{
-        let startMarker = new AMap.Marker({
+      } else {
+        const startMarker = new AMap.Marker({
           icon: new AMap.Icon({
             image: 'http://webapi.amap.com/theme/v1.3/images/newpc/poi-1.png',
             imageOffset: new AMap.Pixel(-334, -180)
@@ -159,7 +161,7 @@ export default {
         })
         startMarker.setMap(map)
 
-        let endMarker = new AMap.Marker({
+        const endMarker = new AMap.Marker({
           icon: new AMap.Icon({
             image: 'http://webapi.amap.com/theme/v1.3/images/newpc/poi-1.png',
             imageOffset: new AMap.Pixel(-334, -136)
@@ -170,23 +172,23 @@ export default {
         endMarker.setMap(map)
       }
     },
-    async search(){
-      let params = {};
-      let sDay = this.filters.days[0],
+    async search() {
+      const params = {}
+      const sDay = this.filters.days[0],
         eDay = this.filters.days[1]
       if (!sDay) {
         this.$message({
-          type : 'warning',
-          message : '日期不能为空'
-        });
+          type: 'warning',
+          message: '日期不能为空'
+        })
         return false
       }
-      params['days'] = moment(sDay).format('YYYY-MM-DD')+'@'+moment(eDay).format('YYYY-MM-DD')
+      params['days'] = moment(sDay).format('YYYY-MM-DD') + '@' + moment(eDay).format('YYYY-MM-DD')
       console.log(this.filters.search)
       params['search'] = this.filters.search
       params[this.filters.search] = this.filters.user_car_tel
       this.listLoading = true
-      let response = await getList(params)
+      const response = await getList(params)
       if (response) {
         this.tableData2 = []
         this.currentPage4 = response['current_page']
@@ -238,6 +240,7 @@ export default {
   },
   data() {
     return {
+      totalcount: 0,
       tableData2: [{
         'id': 'i',
         'name': 'i',
@@ -247,7 +250,7 @@ export default {
       }],
       filters: {
         user_car_tel: '',
-        search: 'run',
+        search: 'all',
         days: []
       },
       options: [{
@@ -265,6 +268,9 @@ export default {
       }, {
         value: 'daily',
         label: '日常出行'
+      }, {
+        value: 'all',
+        label: '所有'
       }],
       currentPage4: 1,
       dialogVisible: false,
